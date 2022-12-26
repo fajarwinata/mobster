@@ -1,7 +1,10 @@
 /*
   KELAS SENSOR
   1. Sensor Jarak
-  KODE : VL53L0x
+      KODE : VL53L0x
+  2. Sensor Tekanan (Next)
+  3. Sensor Battery
+      11k Ohm -> A0
 */
 
 #ifndef SENSORS_H

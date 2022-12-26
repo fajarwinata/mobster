@@ -1,22 +1,617 @@
 const char controlPage[] PROGMEM =
 R"=====(
-<header>
-        <link href="https://fonts.googleapis.com/css2?family=Lato&display=swap" rel="stylesheet">
-     </header>
-     
-     <h1>Micro Submarine</h1>
-     <p>Control Test!</p>
-     <div class="frame">
-        <button onclick="button_ve('NA')" class="custom-btn btn-12"><span>UP!</span><span>NAIK</span></button>
-       <button onclick="button_ve('TU')" class="custom-btn btn-7"><span>TURUN</span></button>
-       <button onclick="button_he('MA')" class="custom-btn btn-13">MAJU</button>
-       <button onclick="button_he('MU')" class="custom-btn btn-14">MUNDUR</button>
-       <button onclick="button_stop()" class="custom-btn btn-11">BERHENTI!<div class="dot"></div></button>
-       <p style="font-family: Andale Mono, monospace;">
-         KELOMPOK 1 | MAGISTER TEKNIK ELEKTRO STEI ITB</p>
-         <br>Status Horizontal:<span id="status_horizontal"></span>
-         <br>Status Vertical:<span id="status_vertical"></span>
-         <br>Jarak Ke Dasar:<span id="jarak_dasar"></span> mm
-         <br>Battery:<span id="battery"></span> V
-     </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Bitter:400,700&display=swap&subset=latin-ext" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" rel="stylesheet" />
+    <link rel="shortcut icon" href="https://icons.iconarchive.com/icons/flat-icons.com/flat/512/Submarine-icon.png" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MOBSTER</title>
+    <style>
+            body {
+                  background: #dfe7ef;
+                  font-family: "Bitter", serif;
+                }
+
+                * {
+                  box-sizing: border-box;
+                }
+
+                .icon {
+                  display: inline-block;
+                  width: 1em;
+                  height: 1em;
+                  stroke-width: 0;
+                  stroke: currentColor;
+                  fill: currentColor;
+                }
+
+                .wrapper {
+                  width: 100%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  min-height: 100vh;
+                  background-size: cover;
+                }
+                @media screen and (max-width: 700px), (max-height: 500px) {
+                  .wrapper {
+                    flex-wrap: wrap;
+                    flex-direction: column;
+                  }
+                }
+
+                .player {
+                  background: #eef3f7;
+                  width: 410px;
+                  min-height: 480px;
+                  box-shadow: 0px 15px 35px -5px rgba(50, 88, 130, 0.32);
+                  border-radius: 15px;
+                  padding: 30px;
+                }
+                @media screen and (max-width: 576px), (max-height: 500px) {
+                  .player {
+                    width: 95%;
+                    padding: 20px;
+                    margin-top: 75px;
+                    min-height: initial;
+                    padding-bottom: 30px;
+                    max-width: 400px;
+                  }
+                }
+                .player__top {
+                  display: flex;
+                  align-items: flex-start;
+                  position: relative;
+                  z-index: 4;
+                }
+                @media screen and (max-width: 576px), (max-height: 500px) {
+                  .player__top {
+                    flex-wrap: wrap;
+                  }
+                }
+                .player-cover {
+                  width: 300px;
+                  height: 300px;
+                  margin-left: -70px;
+                  flex-shrink: 0;
+                  position: relative;
+                  z-index: 2;
+                  border-radius: 15px;
+                  z-index: 1;
+                }
+                @media screen and (max-width: 576px), (max-height: 500px) {
+                  .player-cover {
+                    margin-top: -70px;
+                    margin-bottom: 25px;
+                    width: 290px;
+                    height: 290px;
+                    margin-left: auto;
+                    margin-right: auto;
+                  }
+                }
+                .player-cover__item {
+                  background-repeat: no-repeat;
+                  background-position: center;
+                  background-size: cover;
+                  width: 100%;
+                  height: 100%;
+                  border-radius: 15px;
+                  position: absolute;
+                  left: 0;
+                  top: 0;
+                }
+                .player-cover__item:before {
+                  content: "";
+                  background: inherit;
+                  width: 100%;
+                  height: 100%;
+                  box-shadow: 0px 10px 40px 0px rgba(76, 70, 124, 0.5);
+                  display: block;
+                  z-index: 1;
+                  position: absolute;
+                  top: 30px;
+                  transform: scale(0.9);
+                  filter: blur(10px);
+                  opacity: 0.9;
+                  border-radius: 15px;
+                }
+                .player-cover__item:after {
+                  content: "";
+                  background: inherit;
+                  width: 100%;
+                  height: 100%;
+                  box-shadow: 0px 10px 40px 0px rgba(76, 70, 124, 0.5);
+                  display: block;
+                  z-index: 2;
+                  position: absolute;
+                  border-radius: 15px;
+                }
+                .player-cover__img {
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                  border-radius: 15px;
+                  box-shadow: 0px 10px 40px 0px rgba(76, 70, 124, 0.5);
+                  user-select: none;
+                  pointer-events: none;
+                }
+                .player-controls {
+                  flex: 1;
+                  padding-left: 20px;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                }
+                @media screen and (max-width: 576px), (max-height: 500px) {
+                  .player-controls {
+                    flex-direction: row;
+                    padding-left: 0;
+                    width: 100%;
+                    flex: unset;
+                  }
+                }
+                .player-controls__item {
+                  display: inline-flex;
+                  font-size: 40px;
+                  padding: 5px;
+                  margin-bottom: 10px;
+                  color: #acb8cc;
+                  cursor: pointer;
+                  width: 50px;
+                  height: 50px;
+                  align-items: center;
+                  justify-content: center;
+                  position: relative;
+                  transition: all 0.3s ease-in-out;
+                }
+                @media screen and (max-width: 576px), (max-height: 500px) {
+                  .player-controls__item {
+                    font-size: 36px;
+                    padding: 5px;
+                    margin-right: 10px;
+                    color: #acb8cc;
+                    cursor: pointer;
+                    width: 40px;
+                    height: 40px;
+                    margin-bottom: 0;
+                  }
+                }
+                .player-controls__item::before {
+                  content: "";
+                  position: absolute;
+                  width: 100%;
+                  height: 100%;
+                  border-radius: 50%;
+                  background: rgba(255, 196, 0, 0.64);
+                  transform: scale(0.5);
+                  opacity: 0;
+                  box-shadow: 0px 5px 10px 0px rgba(76, 70, 124, 0.2);
+                  transition: all 0.3s ease-in-out;
+                  transition: all 0.4s cubic-bezier(0.35, 0.57, 0.13, 0.88);
+                }
+                @media screen and (min-width: 500px) {
+                  .player-controls__item:hover {
+                    color: #532ab9;
+                  }
+                  .player-controls__item:hover::before {
+                    opacity: 0.3;
+                    transform: scale(1.3);
+                  }
+                }
+                @media screen and (max-width: 576px), (max-height: 500px) {
+                  .player-controls__item:active {
+                    color: #532ab9;
+                  }
+                  .player-controls__item:active::before {
+                    opacity: 1;
+                    transform: scale(1.3);
+                  }
+                }
+                .player-controls__item .icon {
+                  position: relative;
+                  z-index: 2;
+                }
+                .player-controls__item.-xl {
+                  margin-bottom: 0;
+                  font-size: 95px;
+                  filter: drop-shadow(0 11px 6px rgba(172, 184, 204, 0.45));
+                  color: rgba(173, 0, 0, 0.588);
+                  width: auto;
+                  height: auto;
+                  display: inline-flex;
+                }
+                @media screen and (max-width: 576px), (max-height: 500px) {
+                  .player-controls__item.-xl {
+                    margin-left: auto;
+                    font-size: 75px;
+                    margin-right: 0;
+                  }
+                }
+                .player-controls__item.-xl:before {
+                  display: none;
+                }
+
+                .player-controls__item.-xl:hover {
+                  color: rgba(249, 19, 19, 0.933);
+                  filter: drop-shadow(0 0px 6px rgba(255, 0, 0, 0.888));
+                }
+                
+                .player-controls__item.-favorite.active {
+                  color: red;
+                }
+
+                [v-cloak] {
+                  display: none;
+                }
+
+                [v-cloak] > * {
+                  display: none;
+                }
+
+                .progress {
+                  width: 100%;
+                  margin-top: -15px;
+                  user-select: none;
+                }
+                .progress__top {
+                  display: flex;
+                  align-items: flex-end;
+                  justify-content: space-between;
+                }
+                .progress__battery {
+                  color: #71829e;
+                  font-weight: 700;
+                  font-size: 20px;
+                  opacity: 0.5;
+                }
+                .progress__time {
+                  margin-top: 2px;
+                  color: #71829e;
+                  font-weight: 700;
+                  font-size: 16px;
+                  opacity: 0.7;
+                }
+
+                .progress__bar {
+                  height: 6px;
+                  width: 100%;
+                  cursor: pointer;
+                  background-color: #d0d8e6;
+                  display: inline-block;
+                  border-radius: 10px;
+                }
+
+                .progress__current {
+                  height: inherit;
+                  width: 0%;
+                  border-radius: 10px;
+                }
+
+                .mobster-info {
+                  color: #71829e;
+                  flex: 1;
+                  padding-right: 60px;
+                  user-select: none;
+                }
+                @media screen and (max-width: 576px), (max-height: 500px) {
+                  .mobster-info {
+                    padding-right: 30px;
+                  }
+                }
+                .mobster-info__name {
+                  font-size: 20px;
+                  font-weight: bold;
+                  margin-bottom: 12px;
+                  line-height: 1.3em;
+                }
+                @media screen and (max-width: 576px), (max-height: 500px) {
+                  .mobster-info__name {
+                    font-size: 18px;
+                    margin-bottom: 9px;
+                  }
+                }
+                .mobster-info__track {
+                  font-weight: 400;
+                  font-size: 20px;
+                  opacity: 0.7;
+                  line-height: 1.3em;
+                  min-height: 52px;
+                }
+                @media screen and (max-width: 576px), (max-height: 500px) {
+                  .mobster-info__track {
+                    font-size: 18px;
+                    min-height: 50px;
+                  }
+                }
+
+                .github-btn {
+                  position: absolute;
+                  right: 40px;
+                  bottom: 50px;
+                  text-decoration: none;
+                  padding: 15px 25px;
+                  border-radius: 4px;
+                  box-shadow: 0px 4px 30px -6px rgba(36, 52, 70, 0.65);
+                  background: #24292e;
+                  color: #fff;
+                  font-weight: bold;
+                  letter-spacing: 1px;
+                  font-size: 16px;
+                  transition: all 0.3s ease-in-out;
+                }
+                @media screen and (min-width: 500px) {
+                  .github-btn:hover {
+                    transform: scale(1.1);
+                    box-shadow: 0px 17px 20px -6px rgba(36, 52, 70, 0.36);
+                  }
+                }
+                @media screen and (max-width: 700px) {
+                  .github-btn {
+                    position: relative;
+                    bottom: auto;
+                    right: auto;
+                    margin-top: 20px;
+                  }
+                  .github-btn:active {
+                    transform: scale(1.1);
+                    box-shadow: 0px 17px 20px -6px rgba(36, 52, 70, 0.36);
+                  }
+                }
+
+                .scale-out-enter-active {
+                  transition: all 0.35s ease-in-out;
+                }
+
+                .scale-out-leave-active {
+                  transition: all 0.35s ease-in-out;
+                }
+
+                .scale-out-enter {
+                  transform: scale(0.55);
+                  pointer-events: none;
+                  opacity: 0;
+                }
+
+                .scale-out-leave-to {
+                  transform: scale(1.2);
+                  pointer-events: none;
+                  opacity: 0;
+                }
+
+                .scale-in-enter-active {
+                  transition: all 0.35s ease-in-out;
+                }
+
+                .scale-in-leave-active {
+                  transition: all 0.35s ease-in-out;
+                }
+
+                .scale-in-enter {
+                  transform: scale(1.2);
+                  pointer-events: none;
+                  opacity: 0;
+                }
+
+                .scale-in-leave-to {
+                  transform: scale(0.55);
+                  pointer-events: none;
+                  opacity: 0;
+                }
+
+
+    </style>
+</head>
+<body>
+         <div class="wrapper" id="app">
+      <div class="player">
+        <div class="player__top">
+          <div class="player-cover">
+            <transition-group :name="transitionName">
+                <div class="player-cover__item" style="background: url(https://raw.githubusercontent.com/fajarwinata/mobster/main/banner_mobster.png); background-size: 100%;" ></div>
+            </transition-group>
+          </div>
+          <div class="player-controls">
+            <div class="player-controls__item -favorite" id="na" onclick="button_ve('NA')">
+              <i class="fas fa-arrow-circle-up"></i>
+            </div>
+            <div class="player-controls__item -favorite" id="tu" onclick="button_ve('TU')">
+              <i class="fas fa-arrow-circle-down"></i>
+            </div>
+            <div class="player-controls__item -favorite" id="ma" onclick="button_he('MA')">
+              <i class="fas fa-arrow-circle-right"></i>
+            </div>
+            <div class="player-controls__item -favorite" id="mu" onclick="button_he('MU')">
+              <i class="fas fa-arrow-circle-left"></i>
+            </div>
+            <div class="player-controls__item -xl" onclick="button_stop()">
+              <i class="fas fa-power-off"></i>
+            </div>
+          </div>
+        </div>
+        <div class="progress" ref="progress">
+          <div class="progress__top">
+            <table width="100%">
+              <tr>
+                <td width="30%">
+                  <div style="text-align:center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:12px;background-color: #084ebf; min-height: 90px; width:85px; margin:5px; border-radius: 10px 0px 0px 10px;padding:10px;color:#d0d8e6">
+                    <span>Jarak Ke-Dasar:</span><hr>
+                    <span style="font-size: 25px;" id="sn_jarak">... </span>
+                    Milimeter
+                  </div>
+                </td>
+                <td width="70%">
+                  <div class="mobster-info" v-if="currentTrack">
+                    <div class="mobster-info__name"><i class="fas fa-cog fa-fade"></i> Mesin:<hr></div>
+                    <span style="font-size: 15px;" id="sts_mcn">Loading...</span>
+                    <hr>
+                    <div class="mobster-info__track" id="sts_dir"><i class="fas fa-rocket"></i> Menunggu...</div>
+                  </div>
+
+                </td>
+              </tr>
+            </table>
+            <div class="progress__battery">0%</div>
+          </div>
+          <div class="progress__bar" @click="clickProgress">
+            <div class="progress__current" style="width :5%;background-color: #d30000; "></div>
+          </div>
+          <div class="progress__time">Tegangan : <span id="sn_battery">0</span> V</div>
+        </div>
+        <div v-cloak></div>
+      </div>
+      <a href="javascript:void(0);" class="github-btn" id="kelompok">
+        Kelompok 1 TMDG | STEI ITB
+      </a>
+    </div>
+
+        
+     <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/js/all.min.js" ></script>
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+      var websock;
+      $(document).ready(function(){
+        InitWebSocket(); //Inisialisasi Web Socket
+      });
+
+      function InitWebSocket(){
+        var btr, JSONobj, percent;
+        //Objek Web Socket
+        websock = new WebSocket('ws://'+window.location.hostname+':88/');
+        
+        websock.onmessage = function(evt){
+          JSONobj = JSON.parse(evt.data); //JSON Data Transfer
+
+          if(JSONobj.v_engine != "OFF"){
+            $("#sts_mcn").attr("style", false);
+            $("#sts_mcn").html("Vertical Engine");
+            if(JSONobj.v_engine == "NA"){
+                $("#sts_dir").html("<i class=\"fas fa-upload fa-beat\" style=\"color: rgb(2, 70, 47);\"></i> Naik");
+              } else {
+                $("#sts_dir").html("<i class=\"fas fa-download fa-beat\" style=\"color: rgb(2, 70, 47);\"></i> Turun");
+            }
+          } 
+          else if(JSONobj.h_engine != "OFF"){
+            $("#sts_mcn").attr("style", false);
+            $("#sts_mcn").html("Horizontal Engine");
+            if(JSONobj.h_engine == "MA"){
+                $("#sts_dir").html("<i class=\"fas fa-fan fa-spin\" style=\"color: rgb(2, 70, 47);\"></i> Maju");
+              } else {
+                $("#sts_dir").html("<i class=\"fas fa-fan fa-spin\" style=\"color: rgb(2, 70, 47);\"></i> Mundur");
+              }
+            } else {
+              $("#sts_mcn").html("Tidak Aktif");
+              $("#sts_mcn").css("color", "red");
+              $("#sts_dir").html("<i class=\"fas fa-exclamation-triangle\" style=\"color: red;\"></i> Engine OFF");
+          }
+          
+          //Sensor
+          $("#sn_jarak").html(JSONobj.jarak);
+          btr     = parseFloat(JSONobj.battery);
+          percent = btr/3.7*100;
+          
+          $("#sn_battery").html(btr);
+
+          $(".progress__battery").html(parseInt(percent)+"%");
+
+          if(btr > 3.5 && btr <= 3.7){
+            $(".progress__current").css("width", "100%");
+            $(".progress__current").css("background-color", "#00bb4d");
+          } else if(btr > 3.3 && btr <= 3.4){
+            $(".progress__current").css("width", "70%");
+            $(".progress__current").css("background-color", "#00a7bb");
+          } else if(btr > 3.1 && btr <= 3.2){
+            $(".progress__current").css("width", "40%");
+            $(".progress__current").css("background-color", "#e89e00");
+          } else if(btr > 3.05 && btr <= 3.1){
+            $(".progress__current").css("width", "10%");
+            $(".progress__current").css("background-color", "#e84300");
+          } else {
+            $(".progress__current").css("width", "5%");
+            $(".progress__current").css("background-color", "#d30000");
+          }
+          
+        
+        }
+      } // Init WebSocket
+
+      function button_ve(kode){
+        btnv = 'v_engine=OFF';
+        
+        if(kode === 'NA'){
+          btnv = 'v_engine=NA';
+          $("#na").addClass("active");
+          $("#tu").removeClass("active");
+        } else if(kode === 'TU'){
+          btnv = 'v_engine=TU';
+          $("#na").removeClass("active");
+          $("#tu").addClass("active");
+        }
+
+        websock.send(btnv);
+
+      }
+
+      function button_he(kode){
+        btnh = 'h_engine=OFF';
+
+        if(kode === 'MA'){
+          btnh = 'h_engine=MA';
+          $("#mu").removeClass("active");
+          $("#ma").addClass("active");
+        } else if(kode === 'MU'){
+          btnh = 'h_engine=MU';
+          $("#ma").removeClass("active");
+          $("#mu").addClass("active");
+        }
+
+        websock.send(btnh);
+
+      }
+
+      function button_stop(){
+        btn = 'stop_all=1';
+        $("#ma").removeClass("active");
+        $("#mu").removeClass("active");
+        $("#na").removeClass("active");
+        $("#tu").removeClass("active");
+
+        websock.send(btn);
+
+      }
+
+      $("#kelompok").click(function(){
+        Swal.fire({
+                title: '<strong>Kelompok <u>SATU</u></strong>',
+                icon: 'info',
+                html:
+                  '<ol>' +
+                  '<li>Fajar Winata (NIM. 23222028) </li>' +
+                  '<li>Muhammad Sufi Aulia (NIM. 23221310) </li>'+ 
+                  '<li>Danny Kusuma wijaya (NIM. 23222029) </li>'+ 
+                  '<li>Rizky kharisma (NIM. 23222023) </li>'+ 
+                  '<li>Risaldi Angga Buana Putra (NIM. 23222024) </li>'+ 
+                  '<li>Muhammad Rafif Bariq (NIM. 23222021) </li>'+ 
+                  '</ol>',
+                showCloseButton: true,
+                focusConfirm: false,
+                confirmButtonText:
+                  '<i class="fas fa-thumbs-up"></i> Mantab!',
+                confirmButtonAriaLabel: 'Thumbs up, great!',
+                footer: '<a href="javascript:void(0);">Dosen Pengampu: Dr. Reza Darmakusuma, ST., MT.</a>'
+              })
+      });
+      
+
+    </script>
+  </body>
+</html>
 )=====";

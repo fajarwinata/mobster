@@ -89,7 +89,7 @@
                     margin-top: -70px;
                     margin-bottom: 25px;
                     width: 290px;
-                    height: 230px;
+                    height: 290px;
                     margin-left: auto;
                     margin-right: auto;
                   }
@@ -263,7 +263,7 @@
                   align-items: flex-end;
                   justify-content: space-between;
                 }
-                .progress__duration {
+                .progress__battery {
                   color: #71829e;
                   font-weight: 700;
                   font-size: 20px;
@@ -412,62 +412,130 @@
         <div class="player__top">
           <div class="player-cover">
             <transition-group :name="transitionName">
-                <div class="player-cover__item" v-if="$index === currentTrackIndex" style="background: url(https://raw.githubusercontent.com/muhammederdem/mini-player/master/img/1.jpg) "  v-for="(track, $index) in tracks" :key="$index"></div>
+                <div class="player-cover__item" style="background: url(https://raw.githubusercontent.com/fajarwinata/mobster/main/banner_mobster.png); background-size: 100%;" ></div>
             </transition-group>
           </div>
           <div class="player-controls">
-            <div class="player-controls__item -favorite" :class="{ active : currentTrack.favorited }" @click="favorite">
+            <div class="player-controls__item -favorite" id="na" onclick="button_ve('NA')">
               <i class="fas fa-arrow-circle-up"></i>
             </div>
-            <a class="player-controls__item">
+            <div class="player-controls__item -favorite" id="tu" onclick="button_ve('TU')">
               <i class="fas fa-arrow-circle-down"></i>
-            </a>
-            <div class="player-controls__item" @click="prevTrack">
+            </div>
+            <div class="player-controls__item -favorite" id="ma" onclick="button_he('MA')">
               <i class="fas fa-arrow-circle-right"></i>
             </div>
-            <div class="player-controls__item" @click="nextTrack">
+            <div class="player-controls__item -favorite" id="mu" onclick="button_he('MU')">
               <i class="fas fa-arrow-circle-left"></i>
             </div>
-            <div class="player-controls__item -xl" @click="play">
+            <div class="player-controls__item -xl" onclick="button_stop()">
               <i class="fas fa-power-off"></i>
             </div>
           </div>
         </div>
         <div class="progress" ref="progress">
           <div class="progress__top">
-            <div class="mobster-info" v-if="currentTrack">
-              <div class="mobster-info__name"><i class="fas fa-cog fa-fade"></i> Mesin : <span style="font-size: 15px;">Vertical Engine</span></div>
-              <div class="mobster-info__track"><i class="fas fa-fan fa-spin" style="color: rgb(2, 70, 47);"></i> Maju</div>
-            </div>
-            <div class="progress__duration">10%</div>
+            <table width="100%">
+              <tr>
+                <td width="30%">
+                  <div style="text-align:center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:12px;background-color: #084ebf; min-height: 90px; width:85px; margin:5px; border-radius: 10px 0px 0px 10px;padding:10px;color:#d0d8e6">
+                    <span>Jarak Ke-Dasar:</span><hr>
+                    <span style="font-size: 25px;" id="sn_jarak">... </span>
+                    Milimeter
+                  </div>
+                </td>
+                <td width="70%">
+                  <div class="mobster-info" v-if="currentTrack">
+                    <div class="mobster-info__name"><i class="fas fa-cog fa-fade"></i> Mesin:<hr></div>
+                    <span style="font-size: 15px;" id="sts_mcn">Loading...</span>
+                    <hr>
+                    <div class="mobster-info__track" id="sts_dir"><i class="fas fa-rocket"></i> Menunggu...</div>
+                  </div>
+
+                </td>
+              </tr>
+            </table>
+            <div class="progress__battery">0%</div>
           </div>
           <div class="progress__bar" @click="clickProgress">
-            <div class="progress__current" style="width :15%;background-color: #c28503; "></div>
+            <div class="progress__current" style="width :5%;background-color: #d30000; "></div>
           </div>
-          <div class="progress__time">Tegangan : 3.7 V</div>
+          <div class="progress__time">Tegangan : <span id="sn_battery">0</span> V</div>
         </div>
         <div v-cloak></div>
       </div>
-      <a href="#" target="_blank" class="github-btn">
-        Kelompok 1 TMDG
+      <a href="javascript:void(0);" class="github-btn" id="kelompok">
+        Kelompok 1 TMDG | STEI ITB
       </a>
     </div>
 
         
      <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
      <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/js/all.min.js" ></script>
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-      InitWebSocket();
+      var websock;
+      $(document).ready(function(){
+        InitWebSocket(); //Inisialisasi Web Socket
+      });
+
       function InitWebSocket(){
+        var btr, JSONobj, percent;
+        //Objek Web Socket
         websock = new WebSocket('ws://'+window.location.hostname+':88/');
         
         websock.onmessage = function(evt){
-          JSONobj = JSON.parse(evt.data);
-          document.getElementById('status_horizontal').innerHTML = JSONobj.h_engine;
-          document.getElementById('status_vertical').innerHTML = JSONobj.v_engine;
+          JSONobj = JSON.parse(evt.data); //JSON Data Transfer
+
+          if(JSONobj.v_engine != "OFF"){
+            $("#sts_mcn").attr("style", false);
+            $("#sts_mcn").html("Vertical Engine");
+            if(JSONobj.v_engine == "NA"){
+                $("#sts_dir").html("<i class=\"fas fa-upload fa-beat\" style=\"color: rgb(2, 70, 47);\"></i> Naik");
+              } else {
+                $("#sts_dir").html("<i class=\"fas fa-download fa-beat\" style=\"color: rgb(2, 70, 47);\"></i> Turun");
+            }
+          } 
+          else if(JSONobj.h_engine != "OFF"){
+            $("#sts_mcn").attr("style", false);
+            $("#sts_mcn").html("Horizontal Engine");
+            if(JSONobj.h_engine == "MA"){
+                $("#sts_dir").html("<i class=\"fas fa-fan fa-spin\" style=\"color: rgb(2, 70, 47);\"></i> Maju");
+              } else {
+                $("#sts_dir").html("<i class=\"fas fa-fan fa-spin\" style=\"color: rgb(2, 70, 47);\"></i> Mundur");
+              }
+            } else {
+              $("#sts_mcn").html("Tidak Aktif");
+              $("#sts_mcn").css("color", "red");
+              $("#sts_dir").html("<i class=\"fas fa-exclamation-triangle\" style=\"color: red;\"></i> Engine OFF");
+          }
+          
           //Sensor
-          document.getElementById('jarak_dasar').innerHTML = JSONobj.jarak;
-          document.getElementById('battery').innerHTML = JSONobj.battery;
+          $("#sn_jarak").html(JSONobj.jarak);
+          btr     = parseFloat(JSONobj.battery);
+          percent = btr/3.7*100;
+          
+          $("#sn_battery").html(btr);
+
+          $(".progress__battery").html(parseInt(percent)+"%");
+
+          if(btr > 3.5 && btr <= 3.7){
+            $(".progress__current").css("width", "100%");
+            $(".progress__current").css("background-color", "#00bb4d");
+          } else if(btr > 3.3 && btr <= 3.4){
+            $(".progress__current").css("width", "70%");
+            $(".progress__current").css("background-color", "#00a7bb");
+          } else if(btr > 3.1 && btr <= 3.2){
+            $(".progress__current").css("width", "40%");
+            $(".progress__current").css("background-color", "#e89e00");
+          } else if(btr > 3.05 && btr <= 3.1){
+            $(".progress__current").css("width", "10%");
+            $(".progress__current").css("background-color", "#e84300");
+          } else {
+            $(".progress__current").css("width", "5%");
+            $(".progress__current").css("background-color", "#d30000");
+          }
           
         
         }
@@ -478,8 +546,12 @@
         
         if(kode === 'NA'){
           btnv = 'v_engine=NA';
+          $("#na").addClass("active");
+          $("#tu").removeClass("active");
         } else if(kode === 'TU'){
           btnv = 'v_engine=TU';
+          $("#na").removeClass("active");
+          $("#tu").addClass("active");
         }
 
         websock.send(btnv);
@@ -491,8 +563,12 @@
 
         if(kode === 'MA'){
           btnh = 'h_engine=MA';
+          $("#mu").removeClass("active");
+          $("#ma").addClass("active");
         } else if(kode === 'MU'){
           btnh = 'h_engine=MU';
+          $("#ma").removeClass("active");
+          $("#mu").addClass("active");
         }
 
         websock.send(btnh);
@@ -501,10 +577,37 @@
 
       function button_stop(){
         btn = 'stop_all=1';
+        $("#ma").removeClass("active");
+        $("#mu").removeClass("active");
+        $("#na").removeClass("active");
+        $("#tu").removeClass("active");
 
         websock.send(btn);
 
       }
+
+      $("#kelompok").click(function(){
+        Swal.fire({
+                title: '<strong>Kelompok <u>SATU</u></strong>',
+                icon: 'info',
+                html:
+                  '<ol>' +
+                  '<li>Fajar Winata (NIM. 23222028) </li>' +
+                  '<li>Muhammad Sufi Aulia (NIM. 23221310) </li>'+ 
+                  '<li>Danny Kusuma wijaya (NIM. 23222029) </li>'+ 
+                  '<li>Rizky kharisma (NIM. 23222023) </li>'+ 
+                  '<li>Risaldi Angga Buana Putra (NIM. 23222024) </li>'+ 
+                  '<li>Muhammad Rafif Bariq (NIM. 23222021) </li>'+ 
+                  '</ol>',
+                showCloseButton: true,
+                focusConfirm: false,
+                confirmButtonText:
+                  '<i class="fas fa-thumbs-up"></i> Mantab!',
+                confirmButtonAriaLabel: 'Thumbs up, great!',
+                footer: '<a href="javascript:void(0);">Dosen Pengampu: Dr. Reza Darmakusuma, ST., MT.</a>'
+              })
+      });
+      
 
     </script>
   </body>
